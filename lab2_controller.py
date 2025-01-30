@@ -10,8 +10,8 @@ from controller import Robot, Motor, DistanceSensor
 GROUND_SENSOR_THRESHOLD = 500 #below 500 means black
 
 # These are your pose values that you will update by solving the odometry equations
-pose_x = -0.28
-pose_y = 0.21
+pose_x = 0
+pose_y = 0
 pose_theta = 0
 
 # Index into ground_sensors and ground_sensor_readings for each of the 3 onboard sensors.
@@ -74,8 +74,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     if gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[0] < GROUND_SENSOR_THRESHOLD and gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[2] < GROUND_SENSOR_THRESHOLD: 
     #hit the start line
         state = "drive_forward"
-        pose_x = -0.28
-        pose_y = 0.21
+        pose_x = 0
+        pose_y = 0
         pose_theta = 0
     #print(state)
 
