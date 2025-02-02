@@ -7,7 +7,7 @@ from controller import Robot, Motor, DistanceSensor
 
 # Ground Sensor Measurements under this threshold are black
 # measurements above this threshold can be considered white.
-GROUND_SENSOR_THRESHOLD = 500 #below 500 means black
+GROUND_SENSOR_THRESHOLD = 390 #below 500 means black
 
 # These are your pose values that you will update by solving the odometry equations
 pose_x = 0
@@ -47,11 +47,11 @@ for gs in ground_sensors:
 # Allow sensors to properly initialize
 for i in range(10): robot.step(SIM_TIMESTEP)  
 
-vL = 0 # TODO: Initialize variable for left speed
-vR = 0 # TODO: Initialize variable for right speed
+vL = 0
+vR = 0
 
+reset_timer = 0
 state = "drive_forward"
-#asdf
 
 # Main Control Loop:
 while robot.step(SIM_TIMESTEP) != -1:
@@ -60,25 +60,36 @@ while robot.step(SIM_TIMESTEP) != -1:
     for i, gs in enumerate(ground_sensors):
         gsr[i] = gs.getValue()
 
-    #print(gsr) # TODO: Uncomment to see the ground sensor values!
-    #print(robot.getTime())
-    #print(gsr[0])
+    #sees a line under the center sensor
     if gsr[1] < GROUND_SENSOR_THRESHOLD: 
         state = "drive_forward"
+
+    #sees a line under the left sensor
     if gsr[0] < GROUND_SENSOR_THRESHOLD: 
         state = "rotate_left"
+
+    #sees a line under the right sensor
     if gsr[2] < GROUND_SENSOR_THRESHOLD: 
         state = "rotate_right"
-    if gsr[0] > GROUND_SENSOR_THRESHOLD and gsr[1] > GROUND_SENSOR_THRESHOLD and gsr[2] > GROUND_SENSOR_THRESHOLD: #if it can't find a line
-        state = "rotate_left"
-    if gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[0] < GROUND_SENSOR_THRESHOLD and gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[2] < GROUND_SENSOR_THRESHOLD: 
-    #hit the start line
-        state = "drive_forward"
-        pose_x = 0
-        pose_y = 0
-        pose_theta = 0
-    #print(state)
 
+    #if it can't find a line
+    if gsr[0] > GROUND_SENSOR_THRESHOLD and gsr[1] > GROUND_SENSOR_THRESHOLD and gsr[2] > GROUND_SENSOR_THRESHOLD: 
+        state = "rotate_left"
+
+    #if it's hit the start line
+    if gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[0] < GROUND_SENSOR_THRESHOLD and gsr[1] < GROUND_SENSOR_THRESHOLD and gsr[2] < GROUND_SENSOR_THRESHOLD: 
+        reset_timer = reset_timer - 1
+        
+        #only reset odometry if seeing the start line for 3 consecutive frames
+        state = "drive_forward"
+        if reset_timer < 0:
+            pose_x = 0
+            pose_y = 0
+            pose_theta = 0
+    else:
+        reset_timer = 3
+
+    #update wheel speeds and odometry
     if state == "drive_forward":
         vL = MAX_SPEED
         vR = MAX_SPEED
@@ -92,51 +103,6 @@ while robot.step(SIM_TIMESTEP) != -1:
         vL = MAX_SPEED
         vR = 0
         pose_theta = pose_theta - 0.0246
-        
-    # Hints: 
-    #
-    # 1) Setting vL=MAX_SPEED and vR=-MAX_SPEED lets the robot turn
-    # right on the spot. vL=MAX_SPEED and vR=0.5*MAX_SPEED lets the
-    # robot drive a right curve.
-    #
-    # 2) If your robot "overshoots", turn slower.
-    #
-    # 3) Only set the wheel speeds once so that you can use the speed
-    # that you calculated in your odometry calculation.
-    #
-    # 4) Disable all console output to simulate the robot superfast
-    # and test the robustness of your approach.
-    #
-
-    # TODO: Insert Line Following Code Here  
-    
-    # TODO: Call update_odometry Here
-    
-    # Hints:
-    #
-    # 1) Divide vL/vR by MAX_SPEED to normalize, then multiply with
-    # the robot's maximum speed in meters per second. 
-    #
-    # 2) SIM_TIMESTEP tells you the elapsed time per step. You need
-    # to divide by 1000.0 to convert it to seconds
-    #
-    # 3) Do simple sanity checks. In the beginning, only one value
-    # changes. Once you do a right turn, this value should be constant.
-    #
-    # 4) Focus on getting things generally right first, then worry
-    # about calculating odometry in the world coordinate system of the
-    # Webots simulator first (x points down, y points right)
-
-    
-    # TODO: Insert Loop Closure Code Here
-    
-    # Hints:
-    #
-    # 1) Set a flag whenever you encounter the line
-    #
-    # 2) Use the pose when you encounter the line last 
-    # for best results
-    
     
     print("Current pose: [%5f, %5f, %5f]" % (pose_x, pose_y, pose_theta))
     leftMotor.setVelocity(vL)
